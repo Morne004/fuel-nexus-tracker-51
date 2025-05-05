@@ -17,7 +17,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">1,284</div>
               <p className="text-xs text-muted-foreground">
-                +12.5% from last month
+                <span className="text-success">+12.5%</span> from last month
               </p>
             </CardContent>
           </Card>
@@ -29,7 +29,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">3.2M L</div>
               <p className="text-xs text-muted-foreground">
-                +8.2% from last month
+                <span className="text-success">+8.2%</span> from last month
               </p>
             </CardContent>
           </Card>
@@ -41,7 +41,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">12</div>
               <p className="text-xs text-muted-foreground">
-                -4 from last week
+                <span className="text-success">-4</span> from last week
               </p>
             </CardContent>
           </Card>
@@ -53,7 +53,7 @@ const Dashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">24</div>
               <p className="text-xs text-muted-foreground">
-                +3 from yesterday
+                <span className="text-destructive">+3</span> from yesterday
               </p>
             </CardContent>
           </Card>

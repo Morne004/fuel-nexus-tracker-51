@@ -14,24 +14,27 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 214 80% 46%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 221 58% 19%;  /* #14214D Deep Navy Blue */
+    --primary-foreground: 0 0% 100%;  /* #FFFFFF White */
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 0 0% 96%;  /* #f5f5f5 Light Gray */
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted-foreground: 0 0% 40%;  /* #666666 Slate Gray */
 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 48%;  /* #C82D2D Error/Negative */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 214 80% 46%;
+    --success: 120 100% 20%;  /* #006600 Success/Positive */
+    --success-foreground: 0 0% 100%;
+
+    --border: 0 0% 93%;  /* #eeeeee Border Color */
+    --input: 0 0% 80%;  /* #cccccc Input Border */
+    --ring: 221 58% 19%;  /* #14214D */
 
     --radius: 0.5rem;
 
@@ -91,6 +94,46 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-[#f9f9f9] text-[#333333] font-sans text-base;
+  }
+
+  h1 {
+    @apply text-[26px] font-bold text-primary;
+  }
+
+  h2 {
+    @apply text-[22px] font-bold text-primary;
+  }
+
+  h3 {
+    @apply text-[18px] font-bold text-primary;
+  }
+
+  .small-text {
+    @apply text-[13px] text-muted-foreground;
+  }
+
+  .summary-box {
+    @apply bg-[#f8f9fa] rounded-lg p-4 my-5 border-l-4 border-l-primary;
+  }
+
+  .warning-box {
+    @apply bg-[#f8f9fa] rounded-lg p-4 my-5 border-l-4 border-l-destructive;
+  }
+
+  .summary-label {
+    @apply font-bold mr-2;
+  }
+
+  .amount-positive {
+    @apply text-success font-bold;
+  }
+
+  .amount-negative {
+    @apply text-destructive font-bold;
+  }
+
+  .required {
+    @apply text-destructive;
   }
 }

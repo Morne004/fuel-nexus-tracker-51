@@ -10,12 +10,12 @@ type HeaderProps = {
 const Header = ({ title }: HeaderProps) => {
   return (
     <header className="h-16 flex items-center justify-between px-6 border-b bg-white">
-      <h1 className="text-xl font-semibold">{title}</h1>
+      <h1 className="text-xl font-semibold text-primary">{title}</h1>
       
       <div className="flex items-center space-x-4">
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
-          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
+          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive" />
         </Button>
         
         <div className="flex items-center space-x-2">

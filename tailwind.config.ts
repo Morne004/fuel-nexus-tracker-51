@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Arial', 'Helvetica', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -36,6 +39,10 @@ export default {
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
+				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
 				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
@@ -62,7 +69,23 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// B4i specific colors
+				'deep-navy': '#14214D',
+				'slate-gray': '#666666',
+				'light-gray': '#f5f5f5',
+				'teal-blue': '#6A95A3',
+				'purple': '#7F6CB1',
+				'olive-green': '#969A47',
+				'pink': '#B075A1',
+				'light-blue': '#5899B5',
+				'yellow': '#F5D34B',
+				'red': '#C82D2D',
+				'sage-green': '#AEB15C',
+				'success-green': '#006600',
+				'error-red': '#C82D2D',
+				'bg-gray': '#f9f9f9',
+				'border-color': '#eeeeee',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
