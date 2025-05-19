@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import Queries from "./pages/reconciliation/Queries";
 import UploadDocuments from "./pages/documents/UploadDocuments";
 import ManageDocuments from "./pages/documents/ManageDocuments";
 import NotFound from "./pages/NotFound";
+import Reports from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +47,9 @@ const App = () => (
           {/* Documents Routes */}
           <Route path="/documents/upload" element={<UploadDocuments />} />
           <Route path="/documents/manage" element={<ManageDocuments />} />
+          
+          {/* Reports Route */}
+          <Route path="/reports" element={<Reports />} />
           
           {/* Catch-all Route */}
           <Route path="*" element={<NotFound />} />
