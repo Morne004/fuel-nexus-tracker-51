@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Tabs,
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { ChartContainer } from "@/components/ui/chart";
 import { BarChart, ChartBar, Table as TableIcon } from "lucide-react";
+import { ResponsiveContainer, BarChart as ReBarChart, XAxis, YAxis, Tooltip, Legend, Bar } from "recharts";
 import PageLayout from "@/components/layout/PageLayout";
 
 const summaryData = [
@@ -134,23 +134,21 @@ export default function Reports() {
                   config={{
                     usage: {
                       label: "Usage (L)",
-                      color: "#7F6CB1", // purple
+                      color: "#7F6CB1",
                       icon: ChartBar,
                     },
                   }}
                   className="min-h-[350px]"
                 >
-                  {({ ResponsiveContainer, BarChart: BarGraph, XAxis, YAxis, Tooltip, Legend, Bar }) => (
-                    <ResponsiveContainer width="100%" height={350}>
-                      <BarGraph data={chartData}>
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="usage" fill="#7F6CB1" name="Usage (L)" />
-                      </BarGraph>
-                    </ResponsiveContainer>
-                  )}
+                  <ResponsiveContainer width="100%" height={350}>
+                    <ReBarChart data={chartData}>
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="usage" fill="#7F6CB1" name="Usage (L)" />
+                    </ReBarChart>
+                  </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
             </Card>
