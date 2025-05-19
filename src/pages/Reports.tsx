@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Tabs,
@@ -20,6 +21,7 @@ import { BarChart, ChartBar, Table as TableIcon } from "lucide-react";
 import { ResponsiveContainer, BarChart as ReBarChart, XAxis, YAxis, Tooltip, Legend, Bar } from "recharts";
 import PageLayout from "@/components/layout/PageLayout";
 
+// Summary data
 const summaryData = [
   { label: "Total Fuel Used", value: "120,000 L" },
   { label: "Total Spend", value: "R 2,100,000.00" },
@@ -27,6 +29,7 @@ const summaryData = [
   { label: "Suppliers", value: "7" },
 ];
 
+// Top locations for summary
 const reportTableRows = [
   { location: "JHB Airport", supplier: "Supplier A", usage: 32000, spend: 560000 },
   { location: "DUR Airport", supplier: "Supplier B", usage: 27000, spend: 465000 },
@@ -34,12 +37,49 @@ const reportTableRows = [
   { location: "PE Airport", supplier: "Supplier D", usage: 26000, spend: 465000 },
 ];
 
+// Chart data
 const chartData = [
   { name: "Jan", usage: 23000 },
   { name: "Feb", usage: 19000 },
   { name: "Mar", usage: 24500 },
   { name: "Apr", usage: 21000 },
   { name: "May", usage: 24500 },
+];
+
+// More detailed sample data (a few line items)
+const detailedRows = [
+  {
+    date: "2025-05-01",
+    location: "JHB Airport",
+    supplier: "Supplier A",
+    invoice: "INV-100123",
+    volume: 10000,
+    spend: 175000,
+  },
+  {
+    date: "2025-05-02",
+    location: "DUR Airport",
+    supplier: "Supplier B",
+    invoice: "INV-100124",
+    volume: 7500,
+    spend: 130000,
+  },
+  {
+    date: "2025-05-03",
+    location: "CPT Airport",
+    supplier: "Supplier C",
+    invoice: "INV-100129",
+    volume: 9400,
+    spend: 182000,
+  },
+  {
+    date: "2025-05-04",
+    location: "PE Airport",
+    supplier: "Supplier D",
+    invoice: "INV-100130",
+    volume: 8300,
+    spend: 122000,
+  },
 ];
 
 export default function Reports() {
@@ -159,13 +199,56 @@ export default function Reports() {
             <CardHeader>
               <CardTitle>Detailed Report</CardTitle>
               <CardDescription>
-                Download the complete detailed usage and spend records as CSV or PDF.
+                Download the complete detailed usage and spend records as CSV or PDF, or analyze detailed line items below.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex flex-col md:flex-row gap-4 items-center mb-6">
                 <button className="bg-primary text-primary-foreground px-4 py-2 rounded shadow font-medium">Download CSV</button>
                 <button className="bg-secondary text-secondary-foreground px-4 py-2 rounded shadow font-medium">Download PDF</button>
+              </div>
+              {/* New: Detailed items table */}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Supplier</TableHead>
+                      <TableHead>Invoice</TableHead>
+                      <TableHead>Volume (L)</TableHead>
+                      <TableHead>Spend</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {detailedRows.map((row, i) => (
+                      <TableRow key={`${row.invoice}-${i}`}>
+                        <TableCell>{row.date}</TableCell>
+                        <TableCell>{row.location}</TableCell>
+                        <TableCell>{row.supplier}</TableCell>
+                        <TableCell>{row.invoice}</TableCell>
+                        <TableCell>{row.volume.toLocaleString()}</TableCell>
+                        <TableCell>
+                          {"R " + row.spend.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={4} className="font-bold">Total</TableCell>
+                      <TableCell className="font-bold">
+                        {detailedRows.reduce((a, b) => a + b.volume, 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="font-bold">
+                        {"R " +
+                          detailedRows
+                            .reduce((a, b) => a + b.spend, 0)
+                            .toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                      </TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
               </div>
               <div className="mt-6 text-sm text-muted-foreground">
                 To access line-item records or custom reports, contact support or use the available exports above.
