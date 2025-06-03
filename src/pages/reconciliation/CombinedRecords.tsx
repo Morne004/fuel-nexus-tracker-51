@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
+import RecordDetailModal from '@/components/modals/RecordDetailModal';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,14 +12,222 @@ import { Search, Filter, Download, Flag } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const mockRecords = [
-  { id: 1, flightDate: "2023-05-10", flightNumber: "FA103", aircraft: "ZS-SFB", supplier: "Shell Aviation", location: "CPT", movementVolume: 4500, ifsVolume: 4520, variance: -20, status: "Matched" },
-  { id: 2, flightDate: "2023-05-10", flightNumber: "FA205", aircraft: "ZS-SFA", supplier: "BP Fuel", location: "JNB", movementVolume: 3800, ifsVolume: 3800, variance: 0, status: "Reconciled" },
-  { id: 3, flightDate: "2023-05-11", flightNumber: "FA302", aircraft: "ZS-SFC", supplier: "Engen", location: "DUR", movementVolume: 4200, ifsVolume: 4250, variance: -50, status: "Queried" },
-  { id: 4, flightDate: "2023-05-12", flightNumber: "FA104", aircraft: "ZS-SFD", supplier: "Shell Aviation", location: "CPT", movementVolume: 4300, ifsVolume: 4280, variance: 20, status: "Matched" },
-  { id: 5, flightDate: "2023-05-12", flightNumber: "FA207", aircraft: "ZS-SFE", supplier: "BP Fuel", location: "JNB", movementVolume: 3950, ifsVolume: 3950, variance: 0, status: "Invoiced" },
+  { 
+    id: 1, 
+    flightDate: "2023-05-10", 
+    flightNumber: "FA103", 
+    aircraft: "ZS-SFB", 
+    supplier: "Shell Aviation", 
+    location: "CPT", 
+    movementVolume: 4500, 
+    ifsVolume: 4520, 
+    variance: -20, 
+    status: "Ready to be Invoiced",
+    flySafairData: {
+      flightNumber: "FA103",
+      aircraftRegistration: "ZS-SFB",
+      upliftmentVolume: 4500,
+      fuelSlipNumber: "FS20230510001",
+      date: "2023-05-10",
+      location: "CPT"
+    },
+    supplierData: {
+      flightNumber: "FA103",
+      flightDate: "2023-05-10",
+      aircraftRegistration: "ZS-SFB",
+      ticketInvoiceNumber: "SH230510001",
+      volume: 4520,
+      supplier: "Shell Aviation",
+      location: "CPT"
+    },
+    matchingCriteria: {
+      flight_match: true,
+      date_match: true,
+      reg_match: true,
+      fuel_match: true,
+      ticket_slip_match: true
+    },
+    contractId: "contract-1",
+    tariffId: "tariff-1"
+  },
+  { 
+    id: 2, 
+    flightDate: "2023-05-10", 
+    flightNumber: "FA205", 
+    aircraft: "ZS-SFA", 
+    supplier: "BP Fuel", 
+    location: "JNB", 
+    movementVolume: 3800, 
+    ifsVolume: 3800, 
+    variance: 0, 
+    status: "In Process",
+    flySafairData: {
+      flightNumber: "FA205",
+      aircraftRegistration: "ZS-SFA",
+      upliftmentVolume: 3800,
+      fuelSlipNumber: "FS20230510002",
+      date: "2023-05-10",
+      location: "JNB"
+    },
+    supplierData: {
+      flightNumber: "FA205",
+      flightDate: "2023-05-10",
+      aircraftRegistration: "ZS-SFA",
+      ticketInvoiceNumber: "BP230510001",
+      volume: 3800,
+      supplier: "BP Fuel",
+      location: "JNB"
+    },
+    matchingCriteria: {
+      flight_match: true,
+      date_match: true,
+      reg_match: true,
+      fuel_match: true,
+      ticket_slip_match: true
+    },
+    contractId: "contract-2",
+    tariffId: "tariff-2"
+  },
+  { 
+    id: 3, 
+    flightDate: "2023-05-11", 
+    flightNumber: "FA302", 
+    aircraft: "ZS-SFC", 
+    supplier: "Engen", 
+    location: "DUR", 
+    movementVolume: 4200, 
+    ifsVolume: 4250, 
+    variance: -50, 
+    status: "General Query",
+    flySafairData: {
+      flightNumber: "FA302",
+      aircraftRegistration: "ZS-SFC",
+      upliftmentVolume: 4200,
+      fuelSlipNumber: "FS20230511001",
+      date: "2023-05-11",
+      location: "DUR"
+    },
+    supplierData: {
+      flightNumber: "FA301", // Mismatch
+      flightDate: "2023-05-11",
+      aircraftRegistration: "ZS-SFC",
+      ticketInvoiceNumber: "EN230511001",
+      volume: 4250,
+      supplier: "Engen",
+      location: "DUR"
+    },
+    matchingCriteria: {
+      flight_match: false, // Flight number mismatch
+      date_match: true,
+      reg_match: true,
+      fuel_match: false, // Fuel quantity mismatch
+      ticket_slip_match: true
+    },
+    contractId: "contract-3",
+    tariffId: "tariff-3"
+  },
+  { 
+    id: 4, 
+    flightDate: "2023-05-12", 
+    flightNumber: "FA104", 
+    aircraft: "ZS-SFD", 
+    supplier: "Shell Aviation", 
+    location: "CPT", 
+    movementVolume: 4300, 
+    ifsVolume: 4280, 
+    variance: 20, 
+    status: "Difference too large",
+    flySafairData: {
+      flightNumber: "FA104",
+      aircraftRegistration: "ZS-SFD",
+      upliftmentVolume: 4300,
+      fuelSlipNumber: "FS20230512001",
+      date: "2023-05-12",
+      location: "CPT"
+    },
+    supplierData: {
+      flightNumber: "FA104",
+      flightDate: "2023-05-12",
+      aircraftRegistration: "ZS-SFD",
+      ticketInvoiceNumber: "SH230512001",
+      volume: 4280,
+      supplier: "Shell Aviation",
+      location: "CPT"
+    },
+    matchingCriteria: {
+      flight_match: true,
+      date_match: true,
+      reg_match: true,
+      fuel_match: true,
+      ticket_slip_match: true
+    },
+    contractId: "contract-1",
+    tariffId: "tariff-1"
+  },
+  { 
+    id: 5, 
+    flightDate: "2023-05-12", 
+    flightNumber: "FA207", 
+    aircraft: "ZS-SFE", 
+    supplier: "BP Fuel", 
+    location: "JNB", 
+    movementVolume: 3950, 
+    ifsVolume: 3950, 
+    variance: 0, 
+    status: "Need Credit Note",
+    flySafairData: {
+      flightNumber: "FA207",
+      aircraftRegistration: "ZS-SFE",
+      upliftmentVolume: 3950,
+      fuelSlipNumber: "FS20230512002",
+      date: "2023-05-12",
+      location: "JNB"
+    },
+    supplierData: {
+      flightNumber: "FA207",
+      flightDate: "2023-05-12",
+      aircraftRegistration: "ZS-SFE",
+      ticketInvoiceNumber: "BP230512001",
+      volume: 3950,
+      supplier: "BP Fuel",
+      location: "JNB"
+    },
+    matchingCriteria: {
+      flight_match: true,
+      date_match: true,
+      reg_match: true,
+      fuel_match: true,
+      ticket_slip_match: true
+    },
+    contractId: "contract-2",
+    tariffId: "tariff-2"
+  },
 ];
 
 const CombinedRecords = () => {
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+
+  const handleRowClick = (record) => {
+    setSelectedRecord(record);
+    setDetailModalOpen(true);
+  };
+
+  const handleSaveRecord = (updatedRecord) => {
+    console.log('Saving updated record:', updatedRecord);
+    // Here you would typically update the record in your state/database
+  };
+
+  const handleViewContract = () => {
+    console.log('Viewing contract for record:', selectedRecord);
+    // Navigate to contract view or open contract modal
+  };
+
+  const handleViewTariff = () => {
+    console.log('Viewing tariff for record:', selectedRecord);
+    // Navigate to tariff view or open tariff modal
+  };
+
   return (
     <PageLayout title="Reconciliation - Combined Records">
       <div className="grid gap-6">
@@ -63,7 +272,7 @@ const CombinedRecords = () => {
         <Card>
           <CardHeader>
             <CardTitle>Combined Records</CardTitle>
-            <CardDescription>View and manage matched movement and IFS records</CardDescription>
+            <CardDescription>View and manage matched movement and IFS records. Click on any row to view details.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-6 grid gap-4 md:grid-cols-5">
@@ -181,7 +390,11 @@ const CombinedRecords = () => {
                 </TableHeader>
                 <TableBody>
                   {mockRecords.map((record) => (
-                    <TableRow key={record.id}>
+                    <TableRow 
+                      key={record.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleRowClick(record)}
+                    >
                       <TableCell>{record.flightDate}</TableCell>
                       <TableCell>{record.flightNumber}</TableCell>
                       <TableCell>{record.aircraft}</TableCell>
@@ -197,10 +410,10 @@ const CombinedRecords = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant={
-                          record.status === "Reconciled" ? "default" : 
-                          record.status === "Matched" ? "outline" : 
-                          record.status === "Queried" ? "destructive" :
-                          "secondary"
+                          record.status === "Ready to be Invoiced" || record.status === "In Process" ? "default" : 
+                          record.status === "Need Credit Note" || record.status.includes("Query") ? "destructive" : 
+                          record.status === "Difference too large" ? "secondary" :
+                          "outline"
                         }>
                           {record.status}
                         </Badge>
@@ -213,6 +426,15 @@ const CombinedRecords = () => {
           </CardContent>
         </Card>
       </div>
+
+      <RecordDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        record={selectedRecord}
+        onSave={handleSaveRecord}
+        onViewContract={handleViewContract}
+        onViewTariff={handleViewTariff}
+      />
     </PageLayout>
   );
 };
