@@ -1,13 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Search, Pencil, Trash } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import LocationModal from '@/components/modals/LocationModal';
 
-const mockLocations = [
+interface Location {
+  id: number;
+  name: string;
+  country: string;
+  airport: string;
+  icaoCode: string;
+  iataCode: string;
+  vatRate: number;
+}
+
+const initialLocations: Location[] = [
   { id: 1, name: "Cape Town International", country: "South Africa", airport: "Cape Town International", icaoCode: "FACT", iataCode: "CPT", vatRate: 15 },
   { id: 2, name: "O.R. Tambo International", country: "South Africa", airport: "Johannesburg International", icaoCode: "FAOR", iataCode: "JNB", vatRate: 15 },
   { id: 3, name: "King Shaka International", country: "South Africa", airport: "Durban International", icaoCode: "FALE", iataCode: "DUR", vatRate: 15 },
@@ -16,12 +28,56 @@ const mockLocations = [
 ];
 
 const Locations = () => {
+  const [locations, setLocations] = useState<Location[]>(initialLocations);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<Location | undefined>();
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredLocations = locations.filter(location =>
+    location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    location.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    location.airport.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    location.icaoCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    location.iataCode.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddLocation = () => {
+    setEditingLocation(undefined);
+    setModalMode('create');
+    setModalOpen(true);
+  };
+
+  const handleEditLocation = (location: Location) => {
+    setEditingLocation(location);
+    setModalMode('edit');
+    setModalOpen(true);
+  };
+
+  const handleSaveLocation = (locationData: Location) => {
+    if (modalMode === 'create') {
+      const newLocation = {
+        ...locationData,
+        id: Math.max(...locations.map(l => l.id)) + 1
+      };
+      setLocations([...locations, newLocation]);
+    } else {
+      setLocations(locations.map(l => 
+        l.id === editingLocation?.id ? { ...locationData, id: editingLocation.id } : l
+      ));
+    }
+  };
+
+  const handleDeleteLocation = (id: number) => {
+    setLocations(locations.filter(l => l.id !== id));
+  };
+
   return (
     <PageLayout title="Master Data - Locations">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Location Management</CardTitle>
-          <Button className="flex items-center gap-1">
+          <Button className="flex items-center gap-1" onClick={handleAddLocation}>
             <Plus className="h-4 w-4" />
             Add Location
           </Button>
@@ -33,6 +89,8 @@ const Locations = () => {
               <Input
                 placeholder="Search locations..."
                 className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <Button variant="outline">Filter</Button>
@@ -52,7 +110,7 @@ const Locations = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockLocations.map((location) => (
+                {filteredLocations.map((location) => (
                   <TableRow key={location.id}>
                     <TableCell className="font-medium">{location.name}</TableCell>
                     <TableCell>{location.country}</TableCell>
@@ -62,12 +120,34 @@ const Locations = () => {
                     <TableCell>{location.vatRate}%</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEditLocation(location)}
+                        >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
-                          <Trash className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Location</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{location.name}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteLocation(location.id)}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -77,6 +157,14 @@ const Locations = () => {
           </div>
         </CardContent>
       </Card>
+
+      <LocationModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        location={editingLocation}
+        onSave={handleSaveLocation}
+        mode={modalMode}
+      />
     </PageLayout>
   );
 };
