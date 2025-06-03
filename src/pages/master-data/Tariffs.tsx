@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import PageLayout from '@/components/layout/PageLayout';
 import TariffModal from '@/components/modals/TariffModal';
@@ -10,6 +9,12 @@ import { Plus, Search, Pencil, Trash } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
+interface CustomPrice {
+  id: string;
+  description: string;
+  price: number;
+}
+
 interface Tariff {
   id?: number;
   supplierId: string;
@@ -20,8 +25,8 @@ interface Tariff {
   markup: number;
   startDate: Date;
   endDate: Date;
-  customPerLiterPrice?: number;
-  customPerUpliftmentPrice?: number;
+  customPerLiterPrices?: CustomPrice[];
+  customPerUpliftmentPrices?: CustomPrice[];
   isSpotTariff: boolean;
   contractRef?: string;
   supplier?: string;
@@ -44,7 +49,10 @@ const initialTariffs: Tariff[] = [
     startDate: new Date("2023-01-01"), 
     endDate: new Date("2023-06-30"), 
     status: "Active",
-    isSpotTariff: false
+    isSpotTariff: false,
+    customPerLiterPrices: [
+      { id: '1', description: 'Peak hour surcharge', price: 0.50 }
+    ]
   },
   { 
     id: 2, 
@@ -59,7 +67,10 @@ const initialTariffs: Tariff[] = [
     startDate: new Date("2023-01-01"), 
     endDate: new Date("2023-12-31"), 
     status: "Active",
-    isSpotTariff: false
+    isSpotTariff: false,
+    customPerUpliftmentPrices: [
+      { id: '2', description: 'Weekend service fee', price: 150.00 }
+    ]
   },
   { 
     id: 3, 
@@ -90,7 +101,13 @@ const initialTariffs: Tariff[] = [
     endDate: new Date("2023-06-30"), 
     status: "Active",
     isSpotTariff: true,
-    customPerLiterPrice: 20.50
+    customPerLiterPrices: [
+      { id: '3', description: 'Airport access fee', price: 0.25 }
+    ],
+    customPerUpliftmentPrices: [
+      { id: '4', description: 'Security handling', price: 75.00 },
+      { id: '5', description: 'Emergency response', price: 50.00 }
+    ]
   },
 ];
 
@@ -174,6 +191,11 @@ const Tariffs = () => {
     return tariff.basePrice + tariff.differential + tariff.markup;
   };
 
+  const hasCustomPrices = (tariff: Tariff) => {
+    return (tariff.customPerLiterPrices && tariff.customPerLiterPrices.length > 0) ||
+           (tariff.customPerUpliftmentPrices && tariff.customPerUpliftmentPrices.length > 0);
+  };
+
   return (
     <PageLayout title="Master Data - Tariffs">
       <Card>
@@ -240,10 +262,12 @@ const Tariffs = () => {
                       )}
                     </TableCell>
                     <TableCell className="font-medium">
-                      R {tariff.customPerLiterPrice ? tariff.customPerLiterPrice.toFixed(2) : calculateTotalPrice(tariff).toFixed(2)}
-                      {tariff.customPerLiterPrice && (
-                        <div className="text-xs text-muted-foreground">Custom</div>
-                      )}
+                      <div>
+                        R {calculateTotalPrice(tariff).toFixed(2)}
+                        {hasCustomPrices(tariff) && (
+                          <div className="text-xs text-muted-foreground">+ custom prices</div>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>R {tariff.basePrice.toFixed(2)}</TableCell>
                     <TableCell>R {tariff.differential.toFixed(2)}</TableCell>

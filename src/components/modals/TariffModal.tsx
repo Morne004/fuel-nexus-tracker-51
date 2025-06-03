@@ -10,8 +10,14 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, addWeeks, addMonths, differenceInDays } from 'date-fns';
-import { CalendarIcon, Check, ChevronsUpDown, AlertTriangle, Info } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown, AlertTriangle, Info, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface CustomPrice {
+  id: string;
+  description: string;
+  price: number;
+}
 
 interface Tariff {
   id?: number;
@@ -23,8 +29,8 @@ interface Tariff {
   markup: number;
   startDate: Date;
   endDate: Date;
-  customPerLiterPrice?: number;
-  customPerUpliftmentPrice?: number;
+  customPerLiterPrices?: CustomPrice[];
+  customPerUpliftmentPrices?: CustomPrice[];
   isSpotTariff: boolean;
   contractRef?: string;
 }
@@ -83,8 +89,8 @@ const TariffModal = ({ open, onOpenChange, tariff, onSave, mode }: TariffModalPr
     markup: 0,
     startDate: new Date(),
     endDate: new Date(),
-    customPerLiterPrice: undefined,
-    customPerUpliftmentPrice: undefined,
+    customPerLiterPrices: [],
+    customPerUpliftmentPrices: [],
     isSpotTariff: false,
   });
 
@@ -96,7 +102,11 @@ const TariffModal = ({ open, onOpenChange, tariff, onSave, mode }: TariffModalPr
 
   useEffect(() => {
     if (tariff && mode === 'edit') {
-      setFormData(tariff);
+      setFormData({
+        ...tariff,
+        customPerLiterPrices: tariff.customPerLiterPrices || [],
+        customPerUpliftmentPrices: tariff.customPerUpliftmentPrices || [],
+      });
       checkForContract(tariff.supplierId, tariff.locationId);
     } else {
       setFormData({
@@ -108,8 +118,8 @@ const TariffModal = ({ open, onOpenChange, tariff, onSave, mode }: TariffModalPr
         markup: 0,
         startDate: new Date(),
         endDate: new Date(),
-        customPerLiterPrice: undefined,
-        customPerUpliftmentPrice: undefined,
+        customPerLiterPrices: [],
+        customPerUpliftmentPrices: [],
         isSpotTariff: false,
       });
       setContract(null);
@@ -165,6 +175,40 @@ const TariffModal = ({ open, onOpenChange, tariff, onSave, mode }: TariffModalPr
 
   const calculateTotalPrice = () => {
     return formData.basePrice + formData.differential + formData.markup;
+  };
+
+  const addCustomPrice = (type: 'liter' | 'upliftment') => {
+    const newPrice: CustomPrice = {
+      id: Math.random().toString(36).substr(2, 9),
+      description: '',
+      price: 0
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      [type === 'liter' ? 'customPerLiterPrices' : 'customPerUpliftmentPrices']: [
+        ...(type === 'liter' ? prev.customPerLiterPrices || [] : prev.customPerUpliftmentPrices || []),
+        newPrice
+      ]
+    }));
+  };
+
+  const removeCustomPrice = (type: 'liter' | 'upliftment', id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [type === 'liter' ? 'customPerLiterPrices' : 'customPerUpliftmentPrices']: 
+        (type === 'liter' ? prev.customPerLiterPrices || [] : prev.customPerUpliftmentPrices || [])
+          .filter(price => price.id !== id)
+    }));
+  };
+
+  const updateCustomPrice = (type: 'liter' | 'upliftment', id: string, field: 'description' | 'price', value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      [type === 'liter' ? 'customPerLiterPrices' : 'customPerUpliftmentPrices']: 
+        (type === 'liter' ? prev.customPerLiterPrices || [] : prev.customPerUpliftmentPrices || [])
+          .map(price => price.id === id ? { ...price, [field]: value } : price)
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -246,18 +290,32 @@ const TariffModal = ({ open, onOpenChange, tariff, onSave, mode }: TariffModalPr
                 <p className="text-lg font-bold">R {calculateTotalPrice().toFixed(2)}</p>
               </div>
               
-              {(formData.customPerLiterPrice || formData.customPerUpliftmentPrice) && (
-                <div className="grid grid-cols-2 gap-4">
-                  {formData.customPerLiterPrice && (
+              {(formData.customPerLiterPrices?.length || formData.customPerUpliftmentPrices?.length) && (
+                <div className="space-y-3">
+                  {formData.customPerLiterPrices && formData.customPerLiterPrices.length > 0 && (
                     <div>
-                      <Label className="text-sm font-medium">Custom Per Liter Price</Label>
-                      <p className="text-sm text-muted-foreground">R {formData.customPerLiterPrice.toFixed(2)}</p>
+                      <Label className="text-sm font-medium">Custom Per Liter Prices</Label>
+                      <div className="space-y-1">
+                        {formData.customPerLiterPrices.map((price) => (
+                          <div key={price.id} className="flex justify-between text-sm text-muted-foreground">
+                            <span>{price.description}</span>
+                            <span>R {price.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
-                  {formData.customPerUpliftmentPrice && (
+                  {formData.customPerUpliftmentPrices && formData.customPerUpliftmentPrices.length > 0 && (
                     <div>
-                      <Label className="text-sm font-medium">Custom Per Upliftment Price</Label>
-                      <p className="text-sm text-muted-foreground">R {formData.customPerUpliftmentPrice.toFixed(2)}</p>
+                      <Label className="text-sm font-medium">Custom Per Upliftment Prices</Label>
+                      <div className="space-y-1">
+                        {formData.customPerUpliftmentPrices.map((price) => (
+                          <div key={price.id} className="flex justify-between text-sm text-muted-foreground">
+                            <span>{price.description}</span>
+                            <span>R {price.price.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -556,36 +614,86 @@ const TariffModal = ({ open, onOpenChange, tariff, onSave, mode }: TariffModalPr
             </div>
           </div>
 
-          {/* Custom Prices */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="customPerLiter">Custom Per Liter Price (R)</Label>
-              <Input
-                id="customPerLiter"
-                type="number"
-                step="0.01"
-                value={formData.customPerLiterPrice || ''}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  customPerLiterPrice: e.target.value ? parseFloat(e.target.value) : undefined 
-                })}
-                placeholder="Optional"
-              />
+          {/* Custom Per Liter Prices */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Custom Per Liter Prices</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => addCustomPrice('liter')}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add Custom Price
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="customPerUpliftment">Custom Per Upliftment Price (R)</Label>
-              <Input
-                id="customPerUpliftment"
-                type="number"
-                step="0.01"
-                value={formData.customPerUpliftmentPrice || ''}
-                onChange={(e) => setFormData({ 
-                  ...formData, 
-                  customPerUpliftmentPrice: e.target.value ? parseFloat(e.target.value) : undefined 
-                })}
-                placeholder="Optional"
-              />
+            {formData.customPerLiterPrices && formData.customPerLiterPrices.map((price) => (
+              <div key={price.id} className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Label className="text-xs">Description</Label>
+                  <Input
+                    placeholder="e.g., Peak hour surcharge"
+                    value={price.description}
+                    onChange={(e) => updateCustomPrice('liter', price.id, 'description', e.target.value)}
+                  />
+                </div>
+                <div className="w-32">
+                  <Label className="text-xs">Price (R)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={price.price}
+                    onChange={(e) => updateCustomPrice('liter', price.id, 'price', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => removeCustomPrice('liter', price.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {/* Custom Per Upliftment Prices */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Custom Per Upliftment Prices</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => addCustomPrice('upliftment')}>
+                <Plus className="h-4 w-4 mr-1" />
+                Add Custom Price
+              </Button>
             </div>
+            {formData.customPerUpliftmentPrices && formData.customPerUpliftmentPrices.map((price) => (
+              <div key={price.id} className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Label className="text-xs">Description</Label>
+                  <Input
+                    placeholder="e.g., Weekend service fee"
+                    value={price.description}
+                    onChange={(e) => updateCustomPrice('upliftment', price.id, 'description', e.target.value)}
+                  />
+                </div>
+                <div className="w-32">
+                  <Label className="text-xs">Price (R)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={price.price}
+                    onChange={(e) => updateCustomPrice('upliftment', price.id, 'price', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => removeCustomPrice('upliftment', price.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
