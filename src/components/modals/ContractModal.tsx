@@ -9,9 +9,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Contract {
@@ -63,6 +63,7 @@ const ContractModal = ({ open, onOpenChange, contract, onSave, mode }: ContractM
   const [locationOpen, setLocationOpen] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [percentage, setPercentage] = useState(50);
+  const [dayInput, setDayInput] = useState('');
 
   useEffect(() => {
     if (contract && mode === 'edit') {
@@ -87,12 +88,30 @@ const ContractModal = ({ open, onOpenChange, contract, onSave, mode }: ContractM
     }
   }, [contract, mode, open]);
 
-  const handleDayToggle = (day: number) => {
-    setSelectedDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day].sort((a, b) => a - b)
-    );
+  const addDay = (day: number) => {
+    if (day >= 1 && day <= 31 && !selectedDays.includes(day)) {
+      setSelectedDays(prev => [...prev, day].sort((a, b) => a - b));
+    }
+  };
+
+  const removeDay = (day: number) => {
+    setSelectedDays(prev => prev.filter(d => d !== day));
+  };
+
+  const handleDayInputKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const day = parseInt(dayInput);
+      if (!isNaN(day)) {
+        addDay(day);
+        setDayInput('');
+      }
+    }
+  };
+
+  const addCommonDays = (days: number[]) => {
+    const newDays = [...new Set([...selectedDays, ...days])].sort((a, b) => a - b);
+    setSelectedDays(newDays);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -318,26 +337,103 @@ const ContractModal = ({ open, onOpenChange, contract, onSave, mode }: ContractM
                 </div>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Label>Select Days of Month</Label>
-                <div className="grid grid-cols-7 gap-2 p-4 border rounded-lg">
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                    <div key={day} className="flex items-center space-x-1">
-                      <Checkbox
-                        id={`day-${day}`}
-                        checked={selectedDays.includes(day)}
-                        onCheckedChange={() => handleDayToggle(day)}
-                      />
-                      <Label htmlFor={`day-${day}`} className="text-xs">
-                        {day}
-                      </Label>
-                    </div>
-                  ))}
+                
+                {/* Quick selection buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addCommonDays([1, 15])}
+                  >
+                    1st & 15th
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addCommonDays([1])}
+                  >
+                    1st only
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addCommonDays([15])}
+                  >
+                    15th only
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addCommonDays([31])}
+                  >
+                    Last day
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedDays([])}
+                  >
+                    Clear all
+                  </Button>
                 </div>
+
+                {/* Manual day input */}
+                <div className="space-y-2">
+                  <Label htmlFor="day-input">Add specific day (1-31)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="day-input"
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={dayInput}
+                      onChange={(e) => setDayInput(e.target.value)}
+                      onKeyPress={handleDayInputKeyPress}
+                      placeholder="Enter day number..."
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const day = parseInt(dayInput);
+                        if (!isNaN(day)) {
+                          addDay(day);
+                          setDayInput('');
+                        }
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Selected days display */}
                 {selectedDays.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected days: {selectedDays.join(', ')}
-                  </p>
+                  <div className="space-y-2">
+                    <Label>Selected days:</Label>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedDays.map((day) => (
+                        <Badge key={day} variant="secondary" className="flex items-center gap-1">
+                          {day}
+                          <button
+                            type="button"
+                            onClick={() => removeDay(day)}
+                            className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full p-0.5"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
