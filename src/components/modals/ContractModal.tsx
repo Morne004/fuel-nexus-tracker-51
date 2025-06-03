@@ -9,9 +9,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { format } from 'date-fns';
-import { CalendarIcon, Check, ChevronsUpDown, X } from 'lucide-react';
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Contract {
@@ -61,17 +61,16 @@ const ContractModal = ({ open, onOpenChange, contract, onSave, mode }: ContractM
 
   const [supplierOpen, setSupplierOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [percentage, setPercentage] = useState(50);
-  const [dayInput, setDayInput] = useState('');
+  const [daysCount, setDaysCount] = useState(1);
 
   useEffect(() => {
     if (contract && mode === 'edit') {
       setFormData(contract);
       if (contract.splitType === 'Days' && Array.isArray(contract.splitValue)) {
-        setSelectedDays(contract.splitValue);
+        setDaysCount(contract.splitValue.length);
       } else if (contract.splitType === 'Percentage') {
-        setPercentage(Number(contract.splitValue));
+        setPercentage(Number(contract.splitValue.toString().replace('%', '')));
       }
     } else {
       setFormData({
@@ -83,35 +82,13 @@ const ContractModal = ({ open, onOpenChange, contract, onSave, mode }: ContractM
         splitType: 'Percentage',
         splitValue: '50',
       });
-      setSelectedDays([]);
       setPercentage(50);
+      setDaysCount(1);
     }
   }, [contract, mode, open]);
 
-  const addDay = (day: number) => {
-    if (day >= 1 && day <= 31 && !selectedDays.includes(day)) {
-      setSelectedDays(prev => [...prev, day].sort((a, b) => a - b));
-    }
-  };
-
-  const removeDay = (day: number) => {
-    setSelectedDays(prev => prev.filter(d => d !== day));
-  };
-
-  const handleDayInputKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const day = parseInt(dayInput);
-      if (!isNaN(day)) {
-        addDay(day);
-        setDayInput('');
-      }
-    }
-  };
-
-  const addCommonDays = (days: number[]) => {
-    const newDays = [...new Set([...selectedDays, ...days])].sort((a, b) => a - b);
-    setSelectedDays(newDays);
+  const generateConsecutiveDays = (count: number) => {
+    return Array.from({ length: count }, (_, i) => i + 1);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -119,7 +96,9 @@ const ContractModal = ({ open, onOpenChange, contract, onSave, mode }: ContractM
     
     const finalFormData = {
       ...formData,
-      splitValue: formData.splitType === 'Percentage' ? percentage.toString() + '%' : selectedDays,
+      splitValue: formData.splitType === 'Percentage' 
+        ? percentage.toString() + '%' 
+        : generateConsecutiveDays(daysCount),
     };
     
     onSave(finalFormData);
@@ -324,117 +303,35 @@ const ContractModal = ({ open, onOpenChange, contract, onSave, mode }: ContractM
             {formData.splitType === 'Percentage' ? (
               <div className="space-y-2">
                 <Label>Percentage (%)</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={percentage}
-                    onChange={(e) => setPercentage(Number(e.target.value))}
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[percentage]}
+                    onValueChange={(value) => setPercentage(value[0])}
+                    min={0}
+                    max={100}
+                    step={1}
                     className="flex-1"
                   />
                   <span className="w-12 text-sm font-medium">{percentage}%</span>
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                <Label>Select Days of Month</Label>
-                
-                {/* Quick selection buttons */}
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCommonDays([1, 15])}
-                  >
-                    1st & 15th
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCommonDays([1])}
-                  >
-                    1st only
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCommonDays([15])}
-                  >
-                    15th only
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => addCommonDays([31])}
-                  >
-                    Last day
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedDays([])}
-                  >
-                    Clear all
-                  </Button>
+              <div className="space-y-2">
+                <Label>Number of Days (starting from day 1)</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[daysCount]}
+                    onValueChange={(value) => setDaysCount(value[0])}
+                    min={1}
+                    max={31}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <span className="w-16 text-sm font-medium">{daysCount} day{daysCount !== 1 ? 's' : ''}</span>
                 </div>
-
-                {/* Manual day input */}
-                <div className="space-y-2">
-                  <Label htmlFor="day-input">Add specific day (1-31)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="day-input"
-                      type="number"
-                      min="1"
-                      max="31"
-                      value={dayInput}
-                      onChange={(e) => setDayInput(e.target.value)}
-                      onKeyPress={handleDayInputKeyPress}
-                      placeholder="Enter day number..."
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        const day = parseInt(dayInput);
-                        if (!isNaN(day)) {
-                          addDay(day);
-                          setDayInput('');
-                        }
-                      }}
-                    >
-                      Add
-                    </Button>
-                  </div>
+                <div className="text-sm text-muted-foreground">
+                  Selected days: {generateConsecutiveDays(daysCount).join(', ')}
                 </div>
-
-                {/* Selected days display */}
-                {selectedDays.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Selected days:</Label>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedDays.map((day) => (
-                        <Badge key={day} variant="secondary" className="flex items-center gap-1">
-                          {day}
-                          <button
-                            type="button"
-                            onClick={() => removeDay(day)}
-                            className="ml-1 hover:bg-destructive hover:text-destructive-foreground rounded-full p-0.5"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>
